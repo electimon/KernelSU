@@ -67,25 +67,13 @@ static bool add_typeattribute(struct policydb *db, const char *type,
 	for (i = 0; i < n_slot; ++i)                                           \
 		for (cur = node_ptr[i]; cur; cur = cur->next)
 
-// htable is a struct instead of pointer above 5.8.0:
-// https://elixir.bootlin.com/linux/v5.8-rc1/source/security/selinux/ss/symtab.h
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 8, 0)
-#define ksu_hashtab_for_each(htab, cur)                                        \
-	ksu_hash_for_each(htab.htable, htab.size, cur)
-#else
-#define ksu_hashtab_for_each(htab, cur)                                        \
-	ksu_hash_for_each(htab->htable, htab->size, cur)
-#endif
-
-// symtab_search is introduced on 5.9.0:
-// https://elixir.bootlin.com/linux/v5.9-rc1/source/security/selinux/ss/symtab.h
-#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 9, 0)
-#define symtab_search(s, name) hashtab_search((s)->table, name)
-#define symtab_insert(s, name, datum) hashtab_insert((s)->table, name, datum)
-#endif
-
 #define avtab_for_each(avtab, cur)                                             \
 	ksu_hash_for_each(avtab.htable, avtab.nslot, cur);
+
+// htable is a struct instead of pointer above 5.8.0:
+// https://elixir.bootlin.com/linux/v5.8-rc1/source/security/selinux/ss/symtab.h
+#define ksu_hashtab_for_each(htab, cur)                                        \
+       ksu_hash_for_each(htab.htable, htab.size, cur)
 
 static struct avtab_node *get_avtab_node(struct policydb *db,
 					 struct avtab_key *key,
@@ -457,7 +445,6 @@ static bool add_type_rule(struct policydb *db, const char *s, const char *t,
 // 5.9.0 : static inline int hashtab_insert(struct hashtab *h, void *key, void
 // *datum, struct hashtab_key_params key_params) 5.8.0: int
 // hashtab_insert(struct hashtab *h, void *k, void *d);
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 9, 0)
 static u32 filenametr_hash(const void *k)
 {
 	const struct filename_trans_key *ft = k;
@@ -494,7 +481,6 @@ static const struct hashtab_key_params filenametr_key_params = {
 	.hash = filenametr_hash,
 	.cmp = filenametr_cmp,
 };
-#endif
 
 static bool add_filename_trans(struct policydb *db, const char *s,
 			       const char *t, const char *c, const char *d,

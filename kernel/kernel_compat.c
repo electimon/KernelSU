@@ -84,5 +84,5 @@ ssize_t ksu_kernel_write_compat(struct file *p, const void *buf, size_t count,
 long ksu_strncpy_from_user_nofault(char *dst, const void __user *unsafe_addr,
 				   long count)
 {
-	return strncpy_from_user_nofault(dst, unsafe_addr, count);
+	return strncpy_from_unsafe_user(dst, unsafe_addr, count);
 }
